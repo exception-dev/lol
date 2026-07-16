@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">LOLCompose</string>
+    <string name="intro_00">League Of Legend</string>
+
+    <string name="champion_00">Passive</string>
+
+
+    <string name="champion_spell_0">Q</string>
+    <string name="champion_spell_1">W</string>
+    <string name="champion_spell_2">E</string>
+    <string name="champion_spell_3">R</string>
+</resources>
