@@ -66,38 +66,24 @@ fun String.splitToCodePoints(): List<String> {
 @Composable
 fun Intro(@StringRes strId: Int, onAnimationEnd : () -> Unit) {
 
-    var textIndex by remember { mutableStateOf(0) }
     var textToDisplay by remember { mutableStateOf("") }
 
     val textCharsList: List<String> =  stringResource(id = strId).splitToCodePoints()
 
-    LaunchedEffect(
-        key1 = strId,
-    ) {
-
-        while (textIndex < textCharsList.size) {
-            textCharsList[textIndex].forEachIndexed { charIndex, _ ->
-                textToDisplay += textCharsList[textIndex]
-                    .take(
-                        n = charIndex + 1,
-                    )
-
-                delay(300)
-            }
-            textIndex = (textIndex + 1)
+    LaunchedEffect(strId) {
+        for (codePoint in textCharsList) {
+            textToDisplay += codePoint
+            delay(300)
         }
+        onAnimationEnd()
     }
 
-    Text(text = textToDisplay,
+    Text(
+        text = textToDisplay,
         modifier = Modifier
             .fillMaxSize()
             .wrapContentHeight(),
         textAlign = TextAlign.Center,
         color = Color.White
     )
-
-    if(textToDisplay == stringResource(id = strId)){
-
-        onAnimationEnd()
-    }
 }

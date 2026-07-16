@@ -16,7 +16,8 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ex.lolcompose.R
 import com.ex.lolcompose.domain.common.Constants
@@ -28,7 +29,7 @@ fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(),
     onChampionClick: (String) -> Unit
 ) {
-    val championList by viewModel.list.collectAsState(initial = emptyList())
+    val championList by viewModel.list.collectAsStateWithLifecycle(initialValue = emptyList<Champion>())
     
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -51,14 +52,19 @@ fun MainScreen(
 }
 
 @Composable
-fun ChampionItem(index: Int, champion: Champion, onClick: (String) -> Unit) {
+fun ChampionItem(
+    index: Int,
+    champion: Champion,
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val startPadding = if (index % 2 == 1) dimensionResource(id = R.dimen.grid_item_horizontal_padding) / 2 else 0.dp
     val endPadding = if (index % 2 == 0) dimensionResource(id = R.dimen.grid_item_horizontal_padding) / 2 else 0.dp
     
     Card(
         shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF40404d)),
-        modifier = Modifier
+        modifier = modifier
             .padding(start = startPadding)
             .padding(end = endPadding)
             .padding(bottom = dimensionResource(id = R.dimen.grid_item_vertical_padding)),
