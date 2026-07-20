@@ -2,12 +2,14 @@ package com.ex.lolcompose.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ex.lolcompose.domain.common.DataResult
 import com.ex.lolcompose.domain.model.Champion
 import com.ex.lolcompose.domain.usecase.GetChampionUseCase
+import com.ex.lolcompose.ui.state.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,25 +18,29 @@ class ChampionDetailViewModel @Inject constructor(
     private val getChampionUseCase: GetChampionUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
-    val uiState: StateFlow<UiState> = _uiState
+    private val _uiState = MutableStateFlow<UiState<Champion>>(UiState.Loading)
+    val uiState: StateFlow<UiState<Champion>> = _uiState
+    private var requestJob: Job? = null
+    private var championId: String? = null
 
-    fun getChampionDetail(id: String) {
-        viewModelScope.launch {
+    fun getChampionDetail(id: String, forceRefresh: Boolean = false) {
+        if (!forceRefresh && championId == id && _uiState.value is UiState.Success) return
+
+        championId = id
+        requestJob?.cancel()
+        requestJob = viewModelScope.launch {
             _uiState.value = UiState.Loading
             getChampionUseCase(id)
-                .catch { e ->
-                    _uiState.value = UiState.Error(e)
-                }
-                .collect { champion ->
-                    _uiState.value = UiState.Success(champion)
+                .collect { result ->
+                    _uiState.value = when (result) {
+                        is DataResult.Success -> UiState.Success(result.data)
+                        is DataResult.Error -> UiState.Error(result.exception)
+                    }
                 }
         }
     }
 
-    sealed class UiState {
-        object Loading : UiState()
-        data class Success(val champion: Champion) : UiState()
-        data class Error(val exception: Throwable) : UiState()
+    fun retry() {
+        championId?.let { getChampionDetail(it, forceRefresh = true) }
     }
 }

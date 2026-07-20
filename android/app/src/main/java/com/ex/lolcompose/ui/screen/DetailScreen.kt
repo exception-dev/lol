@@ -1,5 +1,6 @@
 package com.ex.lolcompose.ui.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -27,8 +28,10 @@ import coil.compose.AsyncImage
 import com.ex.lolcompose.R
 import com.ex.lolcompose.domain.common.Constants
 import com.ex.lolcompose.domain.model.Champion
+import com.ex.lolcompose.ui.state.UiState
 import com.ex.lolcompose.ui.viewmodel.ChampionDetailViewModel
 import kotlin.math.absoluteValue
+import androidx.compose.ui.platform.LocalResources
 
 @Composable
 fun DetailScreen(
@@ -47,19 +50,12 @@ fun DetailScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         when (val state = uiState) {
-            is ChampionDetailViewModel.UiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is ChampionDetailViewModel.UiState.Success -> {
-                DetailContent(state.champion)
-            }
-            is ChampionDetailViewModel.UiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "Error: ${state.exception.message}", color = Color.White)
-                }
-            }
+            UiState.Loading -> LoadingContent()
+            is UiState.Success -> DetailContent(state.data)
+            is UiState.Error -> ErrorContent(
+                exception = state.exception,
+                onRetry = viewModel::retry
+            )
         }
     }
 }
@@ -138,6 +134,7 @@ private fun DetailContent(champion: Champion) {
     }
 }
 
+@SuppressLint("DiscouragedApi")
 @Composable
 fun SkillInfoLayout(champion: Champion) {
     Column(modifier = Modifier.padding(8.dp)) {
@@ -154,7 +151,7 @@ fun SkillInfoLayout(champion: Champion) {
         }
 
         champion.spells?.forEachIndexed { index, spell ->
-            val titleId = LocalContext.current.resources.getIdentifier(
+            val titleId = LocalResources.current.getIdentifier(
                 "champion_spell_$index", "string", LocalContext.current.packageName
             )
             val title = if (titleId != 0) stringResource(id = titleId) else ""
@@ -204,9 +201,9 @@ fun SkillInfo(title: String, titleModifier: Modifier, name: String, description:
 
 @Composable
 fun SkinLayout(champion: Champion) {
-    val skins = champion.skins?.filter { it.num == 0 || it.chromas  }
-    println("skins : $skins")
-    if (!skins.isNullOrEmpty()) {
+    println("champion.skins : ${champion.skins}")
+    val skins = champion.skins.orEmpty().filter { it.parentSkin == null }
+    if (skins.isNotEmpty()) {
         Spacer(modifier = Modifier.height(20.dp))
         val pagerState = rememberPagerState(pageCount = { skins.size })
         
@@ -230,7 +227,6 @@ fun SkinLayout(champion: Champion) {
                     .aspectRatio(308f / 560f),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                println("Constants.getSkinImageUrl(champion.id, skin.num) : ${Constants.getSkinImageUrl(champion.id, skin.num)}")
                 Box {
                     AsyncImage(
                         model = Constants.getSkinImageUrl(champion.id, skin.num),
