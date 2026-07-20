@@ -1,6 +1,8 @@
 package com.ex.lolcompose.ui.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -14,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,23 +36,99 @@ fun MainScreen(
     onChampionClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        when (val state = uiState) {
-            UiState.Loading -> LoadingContent()
-            is UiState.Success -> ChampionGrid(
-                champions = state.data,
-                onChampionClick = onChampionClick
+        Column(modifier = Modifier.fillMaxSize()) {
+            ChampionSearchField(
+                query = searchQuery,
+                onQueryChange = viewModel::onSearchQueryChanged,
+                onClearClick = viewModel::clearSearchQuery,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             )
-            is UiState.Error -> ErrorContent(
-                exception = state.exception,
-                onRetry = viewModel::retry
-            )
+
+            Box(modifier = Modifier.weight(1f)) {
+                when (val state = uiState) {
+                    UiState.Loading -> LoadingContent()
+                    is UiState.Success -> {
+                        if (searchQuery.isBlank()) {
+                            ChampionGrid(
+                                champions = state.data,
+                                onChampionClick = onChampionClick
+                            )
+                        } else {
+                            ChampionSearchResultList(
+                                champions = state.data,
+                                onChampionClick = { championId ->
+                                    viewModel.clearSearchQuery()
+                                    onChampionClick(championId)
+                                }
+                            )
+                        }
+                    }
+                    is UiState.Error -> ErrorContent(
+                        exception = state.exception,
+                        onRetry = viewModel::retry
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun ChampionSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClearClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusedColor = Color.White
+    val unfocusedColor = Color.White.copy(alpha = 0.55f)
+    val clearSearchDescription = stringResource(id = R.string.champion_search_clear)
+
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier,
+        singleLine = true,
+        placeholder = {
+            Text(text = stringResource(id = R.string.champion_search_hint))
+        },
+        trailingIcon = if (query.isNotEmpty()) {
+            {
+                IconButton(
+                    onClick = onClearClick,
+                    modifier = Modifier.clearAndSetSemantics {
+                        contentDescription = clearSearchDescription
+                    }
+                ) {
+                    Text(
+                        text = "×",
+                        fontSize = 24.sp
+                    )
+                }
+            }
+        } else {
+            null
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = focusedColor,
+            unfocusedTextColor = unfocusedColor,
+            focusedBorderColor = focusedColor,
+            unfocusedBorderColor = unfocusedColor,
+            focusedPlaceholderColor = focusedColor,
+            unfocusedPlaceholderColor = unfocusedColor,
+            focusedTrailingIconColor = focusedColor,
+            unfocusedTrailingIconColor = unfocusedColor,
+            cursorColor = focusedColor
+        )
+    )
 }
 
 @Composable
@@ -57,12 +137,7 @@ private fun ChampionGrid(
     onChampionClick: (String) -> Unit
 ) {
     if (champions.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(id = R.string.champion_empty),
-                color = Color.White
-            )
-        }
+        EmptyContent(messageResId = R.string.champion_empty)
         return
     }
 
@@ -72,16 +147,60 @@ private fun ChampionGrid(
         contentPadding = PaddingValues(
             horizontal = dimensionResource(id = R.dimen.grid_horizontal_margin),
             vertical = dimensionResource(id = R.dimen.grid_vertical_margin)
-        ),
-        content = {
-            itemsIndexed(
-                items = champions,
-                key = { _, champion -> champion.id }
-            ) { index, champion ->
-                ChampionItem(index, champion, onChampionClick)
-            }
+        )
+    ) {
+        itemsIndexed(
+            items = champions,
+            key = { _, champion -> champion.id }
+        ) { index, champion ->
+            ChampionGridItem(
+                index = index,
+                champion = champion,
+                onClick = onChampionClick
+            )
         }
-    )
+    }
+}
+
+@Composable
+private fun ChampionSearchResultList(
+    champions: List<Champion>,
+    onChampionClick: (String) -> Unit
+) {
+    if (champions.isEmpty()) {
+        EmptyContent(messageResId = R.string.champion_search_empty)
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 12.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(
+            items = champions,
+            key = { champion -> champion.id }
+        ) { champion ->
+            ChampionListItem(
+                champion = champion,
+                onClick = onChampionClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyContent(messageResId: Int) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            text = stringResource(id = messageResId),
+            color = Color.White
+        )
+    }
 }
 
 @Composable
@@ -113,21 +232,63 @@ fun ErrorContent(exception: Throwable, onRetry: () -> Unit) {
 }
 
 @Composable
-fun ChampionItem(
+private fun ChampionListItem(
+    champion: Champion,
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF40404d)),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(66.dp),
+        onClick = { onClick(champion.id) }
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = Constants.getImageUrl(champion.id),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .height(66.dp)
+                    .aspectRatio(
+                        ratio = 885f / 522f,
+                        matchHeightConstraintsFirst = true
+                    )
+            )
+            Text(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                text = champion.name,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChampionGridItem(
     index: Int,
     champion: Champion,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val startPadding = if (index % 2 == 1) dimensionResource(id = R.dimen.grid_item_horizontal_padding) / 2 else 0.dp
-    val endPadding = if (index % 2 == 0) dimensionResource(id = R.dimen.grid_item_horizontal_padding) / 2 else 0.dp
-    
+    val horizontalPadding = dimensionResource(id = R.dimen.grid_item_horizontal_padding)
+    val startPadding = if (index % 2 == 1) horizontalPadding / 2 else 0.dp
+    val endPadding = if (index % 2 == 0) horizontalPadding / 2 else 0.dp
+
     Card(
         shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF40404d)),
         modifier = modifier
-            .padding(start = startPadding)
-            .padding(end = endPadding)
+            .padding(start = startPadding, end = endPadding)
             .padding(bottom = dimensionResource(id = R.dimen.grid_item_vertical_padding)),
         onClick = { onClick(champion.id) }
     ) {

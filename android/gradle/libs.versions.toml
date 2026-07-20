@@ -14,7 +14,6 @@ hiltNavigationCompose = "1.4.0"
 navigationCompose = "2.9.8"
 retrofit = "3.0.0"
 okhttp = "5.4.0"
-# Coil 3.5.x is built with Kotlin 2.4; AGP 9.2's built-in Kotlin is 2.3.10.
 coil = "3.4.0"
 appcompat = "1.7.1"
 material = "1.14.0"

@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -59,6 +61,34 @@ class MainViewModelTest {
 
         assertTrue(state is UiState.Error)
         assertEquals(exception, (state as UiState.Error).exception)
+    }
+
+    @Test
+    fun `search filters champions after 250 milliseconds`() = runTest(dispatcher) {
+        val champions = listOf(
+            Champion(id = "Ahri", name = "아리"),
+            Champion(id = "Garen", name = "가렌")
+        )
+        val repository = CountingChampionRepository(DataResult.Success(champions))
+        val viewModel = MainViewModel(GetChampionListUseCase(repository))
+
+        viewModel.uiState.first { it is UiState.Success }
+        viewModel.onSearchQueryChanged("아")
+
+        advanceTimeBy(249)
+        assertEquals(champions, (viewModel.uiState.value as UiState.Success).data)
+
+        advanceTimeBy(1)
+        runCurrent()
+        assertEquals(
+            listOf(champions.first()),
+            (viewModel.uiState.value as UiState.Success).data
+        )
+
+        viewModel.clearSearchQuery()
+        runCurrent()
+        assertEquals("", viewModel.searchQuery.value)
+        assertEquals(champions, (viewModel.uiState.value as UiState.Success).data)
     }
 
     private class CountingChampionRepository(
