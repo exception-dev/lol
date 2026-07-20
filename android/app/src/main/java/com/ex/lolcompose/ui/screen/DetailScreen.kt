@@ -204,7 +204,8 @@ fun SkillInfo(title: String, titleModifier: Modifier, name: String, description:
 
 @Composable
 fun SkinLayout(champion: Champion) {
-    val skins = champion.skins
+    val skins = champion.skins?.filter { it.num == 0 || it.chromas  }
+    println("skins : $skins")
     if (!skins.isNullOrEmpty()) {
         Spacer(modifier = Modifier.height(20.dp))
         val pagerState = rememberPagerState(pageCount = { skins.size })
@@ -229,6 +230,7 @@ fun SkinLayout(champion: Champion) {
                     .aspectRatio(308f / 560f),
                 shape = RoundedCornerShape(8.dp)
             ) {
+                println("Constants.getSkinImageUrl(champion.id, skin.num) : ${Constants.getSkinImageUrl(champion.id, skin.num)}")
                 Box {
                     AsyncImage(
                         model = Constants.getSkinImageUrl(champion.id, skin.num),

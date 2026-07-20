@@ -2,7 +2,7 @@ package com.ex.lolcompose.domain.common
 
 object Constants {
 
-    const val LOL_VERSION = "12.6.1"
+    const val LOL_VERSION = "16.14.1"
     const val BASE_URL = "https://ddragon.leagueoflegends.com/cdn"
 
     fun getImageUrl(name : String) = "$BASE_URL/img/champion/splash/${name}_0.jpg"
