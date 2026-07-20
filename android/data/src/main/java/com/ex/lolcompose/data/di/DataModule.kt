@@ -3,7 +3,9 @@ package com.ex.lolcompose.data.di
 import com.ex.lolcompose.data.datasource.ChampionRemoteDataSource
 import com.ex.lolcompose.data.datasource.ChampionRemoteDataSourceImpl
 import com.ex.lolcompose.data.repository.ChampionRepositoryImpl
+import com.ex.lolcompose.data.repository.PatchVersionRepositoryImpl
 import com.ex.lolcompose.domain.repository.ChampionRepository
+import com.ex.lolcompose.domain.repository.PatchVersionRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,10 @@ abstract class DataModule {
     abstract fun bindChampionRemoteDataSource(
         championRemoteDataSourceImpl: ChampionRemoteDataSourceImpl
     ): ChampionRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindPatchVersionRepository(
+        patchVersionRepositoryImpl: PatchVersionRepositoryImpl
+    ): PatchVersionRepository
 }

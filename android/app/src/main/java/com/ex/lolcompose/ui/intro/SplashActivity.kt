@@ -14,21 +14,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.lifecycleScope
 import com.ex.lolcompose.R
+import com.ex.lolcompose.domain.usecase.RefreshLatestPatchVersionUseCase
 import com.ex.lolcompose.ui.base.BaseComposeActivity
 import com.ex.lolcompose.ui.main.MainActivity
 import com.ex.lolcompose.ui.theme.LOLComposeTheme
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.streams.toList
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SplashActivity : BaseComposeActivity() {
 
-    companion object{
-        private const val DELAY = 1500L
-    }
+    @Inject
+    lateinit var refreshLatestPatchVersionUseCase: RefreshLatestPatchVersionUseCase
+
+    private lateinit var patchVersionRefresh: Deferred<Unit>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        patchVersionRefresh = lifecycleScope.async {
+            runCatching { refreshLatestPatchVersionUseCase() }
+            Unit
+        }
+
         setContent {
             LOLComposeTheme {
                 // A surface container using the 'background' color from the theme
@@ -37,7 +52,7 @@ class SplashActivity : BaseComposeActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Intro(R.string.intro_00){
-                        startApp()
+                        startAppWhenPatchVersionIsReady()
                     }
                 }
             }
@@ -49,7 +64,14 @@ class SplashActivity : BaseComposeActivity() {
     }
 
 
-    private fun startApp(){
+    private fun startAppWhenPatchVersionIsReady() {
+        lifecycleScope.launch {
+            patchVersionRefresh.await()
+            startApp()
+        }
+    }
+
+    private fun startApp() {
         val intent = Intent(this@SplashActivity, MainActivity::class.java)
         startActivity(intent)
         finish()

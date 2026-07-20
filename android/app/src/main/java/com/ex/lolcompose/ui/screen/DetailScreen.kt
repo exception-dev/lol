@@ -51,7 +51,10 @@ fun DetailScreen(
     ) {
         when (val state = uiState) {
             UiState.Loading -> LoadingContent()
-            is UiState.Success -> DetailContent(state.data)
+            is UiState.Success -> DetailContent(
+                champion = state.data,
+                patchVersion = viewModel.patchVersion
+            )
             is UiState.Error -> ErrorContent(
                 exception = state.exception,
                 onRetry = viewModel::retry
@@ -62,7 +65,7 @@ fun DetailScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DetailContent(champion: Champion) {
+private fun DetailContent(champion: Champion, patchVersion: String) {
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         AsyncImage(
             model = Constants.getImageUrl(champion.id),
@@ -126,7 +129,7 @@ private fun DetailContent(champion: Champion) {
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        SkillInfoLayout(champion)
+        SkillInfoLayout(champion, patchVersion)
 
         SkinLayout(champion)
         
@@ -136,7 +139,7 @@ private fun DetailContent(champion: Champion) {
 
 @SuppressLint("DiscouragedApi")
 @Composable
-fun SkillInfoLayout(champion: Champion) {
+fun SkillInfoLayout(champion: Champion, patchVersion: String) {
     Column(modifier = Modifier.padding(8.dp)) {
         champion.passive?.let {
             SkillInfo(
@@ -146,7 +149,7 @@ fun SkillInfoLayout(champion: Champion) {
                     .padding(horizontal = 8.dp, vertical = 2.dp),
                 name = it.name,
                 description = it.description,
-                imgUrl = Constants.getPassiveImageUrl(it.image.full)
+                imgUrl = Constants.getPassiveImageUrl(it.image.full, patchVersion)
             )
         }
 
@@ -169,7 +172,7 @@ fun SkillInfoLayout(champion: Champion) {
                     .wrapContentHeight(),
                 name = spell.name,
                 description = description,
-                imgUrl = Constants.getSpellImageUrl(spell.image.full)
+                imgUrl = Constants.getSpellImageUrl(spell.image.full, patchVersion)
             )
         }
     }

@@ -1,8 +1,10 @@
 package com.ex.lolcompose.data.di
 
 import com.ex.lolcompose.data.BuildConfig
-import com.ex.lolcompose.domain.common.Constants
 import com.ex.lolcompose.data.api.ApiService
+import com.ex.lolcompose.data.api.VersionApiService
+import com.ex.lolcompose.data.local.PatchVersionStorage
+import com.ex.lolcompose.domain.common.Constants
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -19,8 +21,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BASE_URL = "${Constants.BASE_URL}/${Constants.LOL_VERSION}/"
-
     private const val CONNECT_TIMEOUT = 20L
     private const val WRITE_TIMEOUT = 20L
     private const val READ_TIMEOUT = 20L
@@ -45,13 +45,22 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideRetrofit(okHttpClient: OkHttpClient, gson : Gson) : Retrofit = Retrofit.Builder().apply {
-        baseUrl(BASE_URL)
-        addConverterFactory(GsonConverterFactory.create(gson))
-        client(okHttpClient)
-    }.build()
+    fun provideVersionApiService(okHttpClient: OkHttpClient, gson: Gson): VersionApiService =
+        Retrofit.Builder().apply {
+            baseUrl(Constants.DATA_DRAGON_URL)
+            addConverterFactory(GsonConverterFactory.create(gson))
+            client(okHttpClient)
+        }.build().create(VersionApiService::class.java)
 
     @Singleton
     @Provides
-    fun provideApiService(retrofit: Retrofit) : ApiService = retrofit.create(ApiService::class.java)
+    fun provideApiService(
+        okHttpClient: OkHttpClient,
+        gson: Gson,
+        patchVersionStorage: PatchVersionStorage
+    ): ApiService = Retrofit.Builder().apply {
+        baseUrl("${Constants.BASE_URL}/${patchVersionStorage.getPatchVersion()}/")
+        addConverterFactory(GsonConverterFactory.create(gson))
+        client(okHttpClient)
+    }.build().create(ApiService::class.java)
 }

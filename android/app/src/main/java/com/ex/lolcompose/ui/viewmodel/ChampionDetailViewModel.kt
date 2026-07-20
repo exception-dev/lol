@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.ex.lolcompose.domain.common.DataResult
 import com.ex.lolcompose.domain.model.Champion
 import com.ex.lolcompose.domain.usecase.GetChampionUseCase
+import com.ex.lolcompose.domain.usecase.GetPatchVersionUseCase
 import com.ex.lolcompose.ui.state.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,8 +16,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChampionDetailViewModel @Inject constructor(
-    private val getChampionUseCase: GetChampionUseCase
+    private val getChampionUseCase: GetChampionUseCase,
+    getPatchVersionUseCase: GetPatchVersionUseCase
 ) : ViewModel() {
+
+    val patchVersion: String = getPatchVersionUseCase()
 
     private val _uiState = MutableStateFlow<UiState<Champion>>(UiState.Loading)
     val uiState: StateFlow<UiState<Champion>> = _uiState
