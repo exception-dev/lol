@@ -1,0 +1,65 @@
+.section {
+  padding: 18px 0 28px;
+  overflow: hidden;
+}
+
+.scroller {
+  --skin-card-width: min(72vw, 432px);
+
+  display: flex;
+  padding: 0 calc((100% - var(--skin-card-width)) / 2);
+  overflow-x: auto;
+  scroll-padding-inline: calc((100% - var(--skin-card-width)) / 2);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  gap: 12px;
+  overscroll-behavior-inline: contain;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  --skin-scale: 0.86;
+  --skin-opacity: 0.55;
+
+  position: relative;
+  width: var(--skin-card-width);
+  height: min(500px, 118vw);
+  border-radius: 12px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  background: var(--color-card);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  opacity: var(--skin-opacity);
+  transform: scale(var(--skin-scale));
+  transform-origin: center;
+  transition:
+    opacity 100ms linear,
+    transform 100ms linear;
+  will-change: transform, opacity;
+}
+
+.card:first-child {
+  --skin-scale: 1;
+  --skin-opacity: 1;
+}
+
+.active {
+  z-index: 1;
+}
+
+.card > span {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 10px 8px;
+  background: rgb(0 0 0 / 62%);
+  font-size: 12px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}

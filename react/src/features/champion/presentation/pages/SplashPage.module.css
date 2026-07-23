@@ -1,0 +1,20 @@
+.page {
+  display: grid;
+  min-height: 100dvh;
+  padding: calc(24px + var(--safe-top)) calc(24px + var(--safe-right))
+    calc(24px + var(--safe-bottom)) calc(24px + var(--safe-left));
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgb(22 115 126 / 18%), transparent 38%), var(--color-surface);
+}
+
+.page h1 {
+  min-height: 48px;
+  margin: 0;
+  color: var(--color-text);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(24px, 7vw, 34px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-align: center;
+}

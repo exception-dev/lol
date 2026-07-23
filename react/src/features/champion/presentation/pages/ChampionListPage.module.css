@@ -1,0 +1,106 @@
+.page {
+  min-height: 100dvh;
+  padding-bottom: calc(20px + var(--safe-bottom));
+}
+
+.searchHeader {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  padding: calc(12px + var(--safe-top)) calc(var(--page-padding) + var(--safe-right)) 12px
+    calc(var(--page-padding) + var(--safe-left));
+  background: rgb(24 24 24 / 94%);
+  backdrop-filter: blur(14px);
+}
+
+.grid {
+  display: grid;
+  padding: 4px var(--page-padding) 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.card,
+.searchResult {
+  overflow: hidden;
+  background: var(--color-card);
+  color: var(--color-text);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card {
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 20%);
+}
+
+.card:active,
+.searchResult:active {
+  background: var(--color-card-hover);
+  transform: scale(0.99);
+}
+
+.cardImage {
+  aspect-ratio: 885 / 522;
+}
+
+.card > span {
+  display: block;
+  padding: 9px 10px 10px;
+  overflow: hidden;
+  font-size: 14px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchResults {
+  display: grid;
+  padding: 0 var(--page-padding) 16px;
+  gap: 8px;
+}
+
+.searchResult {
+  display: flex;
+  min-height: 70px;
+  border-radius: 10px;
+  align-items: center;
+}
+
+.searchImage {
+  width: 118px;
+  aspect-ratio: 885 / 522;
+  flex: 0 0 auto;
+}
+
+.searchResult > span {
+  display: grid;
+  min-width: 0;
+  padding: 0 16px;
+  gap: 4px;
+}
+
+.searchResult strong,
+.searchResult small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchResult strong {
+  font-size: 15px;
+}
+
+.searchResult small {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.empty {
+  display: grid;
+  min-height: 260px;
+  padding: 24px;
+  place-items: center;
+  color: var(--color-text-muted);
+  text-align: center;
+}
